@@ -4,6 +4,19 @@ from .models import Product
 from django.http import Http404
 
 #Class Based View
+
+class ProductFeaturedListView(ListView):
+    template_name = "products/list.html"
+    
+    def get_queryset(self, *args, **kwargs):
+        return Product.objects.featured()
+
+
+class ProductFeaturedDetailView(DetailView):
+    queryset = Product.objects.all().featured()
+    template_name = "products/featured-detail.html"
+
+
 class ProductListView(ListView):
     #traz todos os produtos do banco de dados sem filtrar nada 
     queryset = Product.objects.all()
@@ -21,6 +34,24 @@ def product_list_view(request):
         'object_list': queryset
     }
     return render(request, "products/list.html", context)
+
+
+class ProductDetailSlugView(DetailView):
+    queryset = Product.objects.all()
+    template_name = "products/detail.html"
+
+    def get_object(self, *args, **kwargs):
+        slug = self.kwargs.get('slug')
+        #instance = get_object_or_404(Product, slug = slug, active = True)
+        try:
+            instance = Product.objects.get(slug = slug, active = True)
+        except Product.DoesNotExist:
+            raise Http404("Não encontrado!")
+        except Product.MultipleObjectsReturned:
+            qs = Product.objects.filter(slug = slug, active = True)
+            instance =  qs.first()
+        return instance
+
 
 #Class Based View
 class ProductDetailView(DetailView):
